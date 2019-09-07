@@ -1,0 +1,14 @@
+keras
+tensorflow
+flask
+flask-cors
+gevent
+pillow
+numpy
+flask_cors
+requests
+plotting
+matplotlib
+seaborn
+sklearn
+opencv-contrib-python-headless
