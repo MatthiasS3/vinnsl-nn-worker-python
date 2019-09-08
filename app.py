@@ -18,7 +18,7 @@ CORS(app)
 def home():
     return "App is running on port 4000! :D"
 
-@app.route('/pythontest', methods=['GET'])
+@app.route('/tfpy', methods=['GET'])
 def test():
     return "App is running on port 4000! :D"
 
