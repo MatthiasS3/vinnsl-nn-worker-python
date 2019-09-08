@@ -19,7 +19,7 @@ def home():
     return "App is running on port 4000! :D"
 
 @app.route('/pythontest', methods=['GET'])
-def home():
+def test():
     return "App is running on port 4000! :D"
 
 
