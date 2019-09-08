@@ -103,4 +103,4 @@ def predictNumberFromImage():
 
 #Starte App
 #app.run(host='0.0.0.0', port=4000)
-app.run(host='nn10.wst.univie.ac.at', port=4000)
+app.run(host='vinnsl-nn-worker-python', port=4000)

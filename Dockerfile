@@ -1,5 +1,5 @@
 #Dockerfile
-FROM python:3.6-buster
+FROM python:3.6-slim
 #FROM python:3.6-alpine
 
 RUN apt-get update
