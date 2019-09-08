@@ -24,7 +24,7 @@ def test():
 
 
 #Get IRIS
-@app.route('/worker/iris', methods=['POST'])
+@app.route('/tfpy/worker/iris', methods=['POST'])
 def irisPost():
     data = request.get_json()
     id = data["id"]
@@ -34,7 +34,7 @@ def irisPost():
 
 
 #Get Mnist
-@app.route('/worker/mnist', methods=['POST'])
+@app.route('/tfpy/worker/mnist', methods=['POST'])
 def mnistPost():
     data = request.get_json()
     id = data["id"]
@@ -44,7 +44,7 @@ def mnistPost():
 
 
 #Get Wine
-@app.route('/worker/wine', methods=['POST'])
+@app.route('/tfpy/worker/wine', methods=['POST'])
 def winePost():
     data = request.get_json()
     id = data["id"]
@@ -54,7 +54,7 @@ def winePost():
 
 
 #Create LSTM
-@app.route('/worker/lstm', methods=['POST'])
+@app.route('/tfpy/worker/lstm', methods=['POST'])
 def lstmPost():
     data = request.get_json()
     id = data["id"]
@@ -64,7 +64,7 @@ def lstmPost():
 
 
 #Generate Text
-@app.route('/worker/lstm/generate/text', methods=['POST'])
+@app.route('/tfpy/worker/lstm/generate/text', methods=['POST'])
 def postGenerateText():
     data = request.get_json()
     id = data["id"]
@@ -74,7 +74,7 @@ def postGenerateText():
 
 
 #Save text in DB
-@app.route('/worker/save/text/lstm', methods=['POST'])
+@app.route('/tfpy/worker/save/text/lstm', methods=['POST'])
 def postSaveText():
     data = request.get_json()
     id = data["id"]
@@ -84,7 +84,7 @@ def postSaveText():
 
 
 #PredictNumber
-@app.route('/mnist/predictnumber', methods=['Post'])
+@app.route('/tfpy/mnist/predictnumber', methods=['Post'])
 def predictNumberFromImage():
     data = request.data
     data = json.loads(data)
