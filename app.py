@@ -5,9 +5,9 @@ import json
 import base64
 
 #Files Import
-from mnist import *
-from iris import *
-from predictnumber import *
+#from mnist import *
+#from iris import *
+#from predictnumber import *
 
 
 app = Flask(__name__)
