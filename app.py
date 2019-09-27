@@ -49,7 +49,7 @@ def winePost():
     data = request.get_json()
     id = data["id"]
     data = data["vinnslItem"]["definition"]
-    #runWine(id, data)
+    runWine(id, data)
     return "got Wine"
 
 
@@ -99,6 +99,7 @@ def predictNumberFromImage():
 
     pred = predictNumber()
     print("Bild ist: " + str(pred))
+    print("xxxxxx")
 
     #Send result back to server
     data = {'number': pred}

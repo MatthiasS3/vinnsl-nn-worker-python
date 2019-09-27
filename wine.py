@@ -1,56 +1,147 @@
-import numpy as np 
-from data_proccesing import DataProcessing
+import numpy as np
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+
 from keras.models import Sequential
-from keras.layers import Dense 
-from keras.utils import to_categorical
-from keras.optimizers import Adam 
-from keras. initializers import TruncatedNormal 
-import matplotlib.pyplot as plt
+from keras.layers import Dense
+from keras.optimizers import Adam
+from keras import backend as K
+from keras.callbacks import *
+
+import json
+import requests
+import datetime
 
 
-#data processing 
+globalEpochsNr = 1
+globalId = ""
+#vinnslUrl = "http://localhost"
+vinnslUrl = "http://vinnsl-service"
 
-dp = DataProcessing()
-dp.processing('dataset/wine.data.txt', 14)
+def on_epoch_end(epoch, _):
+    global globalEpochsNr
+    global vinnslUrl
+    percent = (epoch+1)/globalEpochsNr
+    percent = round(percent * 100)
+    percent = int(percent)
+    global globalId
+    #Send Json
+    if (globalEpochsNr % 10) == 0:
+        requests.post(vinnslUrl+':8080/vinnsl/create-update/process',
+            data=json.dumps(
+                {
+                    'id': globalId,
+                    'trainingProcess': percent
+                }),
+            headers={'Content-Type': 'application/json'})
 
-X_train, X_test = np.load('dataset/X_train.npy'), np.load('dataset/X_test.npy')
-Y_train, Y_test = np.load('dataset/Y_train.npy'), np.load('dataset/Y_test.npy')
+
+class LayerVinnsl:
+    def __init__(self, num_nodes, activation_function):
+        self.num_nodes = num_nodes
+        self.activation_function = activation_function
+
+def runWine(id, data):
+    global vinnslUrl
+    #Send Json
+    requests.put(vinnslUrl+':8080/status/' + id + '/INPROGRESS')
+    requests.post(vinnslUrl+':8080/vinnsl/create-update/process',
+        data=json.dumps(
+            {
+                'id': id,
+                'trainingProcess': 0
+            }),
+        headers={'Content-Type': 'application/json'})
+    
+
+    #Set variables
+    lr = float(data["parameters"]["valueparameterOrBoolparameterOrComboparameter"][0]["value"])
+    epochs = int(data["parameters"]["valueparameterOrBoolparameterOrComboparameter"][2]["value"])
+    global globalEpochsNr
+    globalEpochsNr = epochs
+    global globalId
+    globalId = id
 
 
-#binary array
-Y_train, Y_test = to_categorical(Y_train), to_categorical(Y_test)
+    hiddenLayers = []
+    for x in data["structure"]["hidden"]:
+        layer = LayerVinnsl(int(x["size"]), data["parameters"]["valueparameterOrBoolparameterOrComboparameter"][1]["value"])
+        hiddenLayers.append(layer)
+    
+    num_features = 4
+    num_classes = 3
 
-#for model
-input_dim = len(X_train[0, :])
-class_num = len(Y_train[0, :]) 
+    #Set data
+    iris_data = load_iris() # load the iris dataset
 
-model = Sequential()
-init = TruncatedNormal(stddev=0.01, seed=10)
+    x = iris_data.data
+    y_ = iris_data.target.reshape(-1, 1) # Convert data to a single column
 
-#config model 
-model.add(Dense(units=50, activation='relu', input_dim=input_dim, kernel_initializer=init))
-model.add(Dense(units=class_num, activation='softmax', kernel_initializer=init))
+    starttime = datetime.datetime.now()
 
-#optimizer
-adam = Adam(lr=0.007)
+    # One Hot encode the class labels
+    encoder = OneHotEncoder(sparse=False)
+    y = encoder.fit_transform(y_)
 
-model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
+    # Split the data for training and testing
+    train_x, test_x, train_y, test_y = train_test_split(x, y, test_size=0.20)
 
-#fit
-history = model.fit(X_train, Y_train, epochs=800, validation_data=(X_test, Y_test), shuffle=False, verbose=0)
+    #############
+    #Define the DNN
+    model = Sequential()
+    #add input layer
+    model.add(Dense(hiddenLayers[0].num_nodes, input_shape=(
+        num_features,), activation=hiddenLayers[0].activation_function))
 
-plt.plot(history.history['acc'])
-plt.plot(history.history['val_acc'])
-plt.title('model_accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='best')
-plt.show()
+    #Define the DNN
+    for i in range(1, len(hiddenLayers)):
+        #model.add(Dense(x.num_nodes, kernel_initializer=init_w, bias_initializer=init_b, activation=x.activation_function))
+        model.add(Dense(hiddenLayers[i].num_nodes, activation=hiddenLayers[i].activation_function))
 
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='best')
-plt.show()
+    #add output layer
+    model.add(Dense(num_classes, activation="softmax"))
+
+    model.summary()
+
+    # Adam optimizer with learning rate of 0.001
+    optimizer = Adam(lr=lr)
+    model.compile(optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+
+    sendPercent = LambdaCallback(on_epoch_end=on_epoch_end)
+
+    # Train the model
+    model.fit(train_x, train_y, verbose=2, batch_size=5,epochs=epochs, callbacks=[sendPercent])
+
+    # Test on unseen data
+    results = model.evaluate(test_x, test_y)
+    loss = round(results[0],5)
+    accuracy = round(results[1],5)
+    accuracyinPrecent = accuracy * 100
+    x = datetime.datetime.utcnow()
+    endtime = datetime.datetime.now()
+    trainingTime = endtime - starttime
+    print('Final test set loss: {:4f}'.format(results[0]))
+    print('Final test set accuracy: {:4f}'.format(results[1]))
+
+    #Send the final result to vinns-service
+    requests.put(vinnslUrl+':8080/status/' + id + '/FINISHED')
+    requests.post(vinnslUrl+':8080/vinnsl/create-update/statistic',
+        data=json.dumps(
+            {
+                'id': id,
+                'createTimestamp': x.strftime("%d.%m.%Y %I:%M:%S %p"),
+                'trainingTime': str(trainingTime.seconds),
+                'numberOfTraining': 1,
+                'lastResult': accuracyinPrecent,
+                'bestResult': accuracyinPrecent,
+                'epochs': epochs,
+                'learningRate': lr,
+                'loss': loss
+            }),
+        headers={'Content-Type': 'application/json'})
+
+    
+    #Clear Session
+    K.clear_session()
