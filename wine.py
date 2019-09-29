@@ -72,6 +72,7 @@ def runWine(id, data):
     
     num_features = int(data["structure"]["input"]["size"])
     num_classes = int(data["structure"]["output"]["size"])
+    print(data)
 
     #Set data
     red = pd.read_csv("winequality-red.csv", sep=';')
@@ -105,8 +106,8 @@ def runWine(id, data):
     #Define the DNN
     model = Sequential()
     #add input layer
-    model.add(Dense(hiddenLayers[0].num_nodes, input_shape=(
-        num_features,), activation=hiddenLayers[0].activation_function))
+    #model.add(Dense(hiddenLayers[0].num_nodes, input_shape=(num_features,), activation=hiddenLayers[0].activation_function))
+    model.add(Dense(12, activation='relu', input_shape=(11,)))
 
     #Define the DNN
     for i in range(1, len(hiddenLayers)):
@@ -114,7 +115,8 @@ def runWine(id, data):
         model.add(Dense(hiddenLayers[i].num_nodes, activation=hiddenLayers[i].activation_function))
 
     #add output layer
-    model.add(Dense(num_classes, activation="sigmoid"))
+    #model.add(Dense(num_classes, activation="sigmoid"))
+    model.add(Dense(1, activation='sigmoid'))
 
     model.summary()
 
