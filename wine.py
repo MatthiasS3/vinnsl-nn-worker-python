@@ -126,7 +126,7 @@ def runWine(id, data):
     sendPercent = LambdaCallback(on_epoch_end=on_epoch_end)
 
     # Train the model
-    model.fit(x_train, y_train,epochs=epochs, batch_size=1, validation_data=[x_test, y_test], verbose=1, callbacks=[sendPercent])
+    model.fit(x_train, y_train,epochs=epochs, batch_size=8, validation_data=[x_test, y_test], verbose=1, callbacks=[sendPercent])
 
     # Test on unseen data
     results = model.evaluate(x_test, y_test)
