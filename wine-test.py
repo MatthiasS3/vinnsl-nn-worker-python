@@ -11,9 +11,17 @@ from keras.layers import Dense
 red = pd.read_csv("winequality-red.csv", sep=';')
 white = pd.read_csv("winequality-white.csv", sep=';')
 
+# Add `type` column to `red` with value 1 and `white` with value 0
+red['type'] = 1
+white['type'] = 0
 
+# Append `white` to `red`
+wines = red.append(white, ignore_index=True)
 
-# Split the data up in train and test sets
+x = wines.iloc[:,0:11]
+y = np.ravel(wines.type)
+
+# Split the data for training and testing
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33, random_state = 42)
 
 # Define the scaler 
@@ -45,7 +53,7 @@ model.get_weights()
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 #run Model
-model.fit(x_train, y_train,epochs=20, batch_size=1, validation_data=[x_test, y_test], verbose=1)
+model.fit(x_train, y_train,epochs=2, batch_size=1, validation_data=[x_test, y_test], verbose=1)
 
 results = model.evaluate(x_test, y_test)
 loss = round(results[0],5)

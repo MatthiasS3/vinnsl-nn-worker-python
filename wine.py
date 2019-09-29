@@ -84,7 +84,7 @@ def runWine(id, data):
     # Append `white` to `red`
     wines = red.append(white, ignore_index=True)
 
-    x = wines.ix[:,0:11]
+    x = wines.iloc[:,0:11]
     y = np.ravel(wines.type)
 
 
