@@ -8,6 +8,7 @@ import base64
 from mnist import *
 from iris import *
 from predictnumber import *
+from wine import *
 
 
 app = Flask(__name__)
