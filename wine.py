@@ -1,8 +1,9 @@
 import numpy as np
 
-from sklearn.datasets import load_iris
+import pandas as pd
+
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -57,7 +58,6 @@ def runWine(id, data):
     
 
     #Set variables
-    lr = float(data["parameters"]["valueparameterOrBoolparameterOrComboparameter"][0]["value"])
     epochs = int(data["parameters"]["valueparameterOrBoolparameterOrComboparameter"][2]["value"])
     global globalEpochsNr
     globalEpochsNr = epochs
@@ -70,23 +70,36 @@ def runWine(id, data):
         layer = LayerVinnsl(int(x["size"]), data["parameters"]["valueparameterOrBoolparameterOrComboparameter"][1]["value"])
         hiddenLayers.append(layer)
     
-    num_features = 4
-    num_classes = 3
+    num_features = int(data["structure"]["input"]["size"])
+    num_classes = int(data["structure"]["output"]["size"])
 
     #Set data
-    iris_data = load_iris() # load the iris dataset
+    red = pd.read_csv("winequality-red.csv", sep=';')
+    white = pd.read_csv("winequality-white.csv", sep=';')
 
-    x = iris_data.data
-    y_ = iris_data.target.reshape(-1, 1) # Convert data to a single column
+    # Add `type` column to `red` with value 1 and `white` with value 0
+    red['type'] = 1
+    white['type'] = 0
+
+    # Append `white` to `red`
+    wines = red.append(white, ignore_index=True)
+
+    x = wines.ix[:,0:11]
+    y = np.ravel(wines.type)
+
 
     starttime = datetime.datetime.now()
 
-    # One Hot encode the class labels
-    encoder = OneHotEncoder(sparse=False)
-    y = encoder.fit_transform(y_)
-
     # Split the data for training and testing
-    train_x, test_x, train_y, test_y = train_test_split(x, y, test_size=0.20)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33, random_state = 42)
+
+    # Define the scaler 
+    scaler = StandardScaler().fit(x_train)
+    # Scale the train set
+    x_train = scaler.transform(x_train)
+    # Scale the test set
+    x_test = scaler.transform(x_test)
+
 
     #############
     #Define the DNN
@@ -101,18 +114,16 @@ def runWine(id, data):
         model.add(Dense(hiddenLayers[i].num_nodes, activation=hiddenLayers[i].activation_function))
 
     #add output layer
-    model.add(Dense(num_classes, activation="softmax"))
+    model.add(Dense(num_classes, activation="sigmoid"))
 
     model.summary()
 
-    # Adam optimizer with learning rate of 0.001
-    optimizer = Adam(lr=lr)
-    model.compile(optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
     sendPercent = LambdaCallback(on_epoch_end=on_epoch_end)
 
     # Train the model
-    model.fit(train_x, train_y, verbose=2, batch_size=5,epochs=epochs, callbacks=[sendPercent])
+    model.fit(x_train, y_train,epochs=20, batch_size=1, validation_data=[x_test, y_test], verbose=1, callbacks=[sendPercent])
 
     # Test on unseen data
     results = model.evaluate(test_x, test_y)
@@ -137,7 +148,6 @@ def runWine(id, data):
                 'lastResult': accuracyinPrecent,
                 'bestResult': accuracyinPrecent,
                 'epochs': epochs,
-                'learningRate': lr,
                 'loss': loss
             }),
         headers={'Content-Type': 'application/json'})

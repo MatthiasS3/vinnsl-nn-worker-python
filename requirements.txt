@@ -5,7 +5,8 @@ flask
 flask-cors
 gevent
 pillow
-numpy
+pandas
+numpy==1.16.1
 flask_cors
 requests
 plotting
