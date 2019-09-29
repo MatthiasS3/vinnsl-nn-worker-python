@@ -53,7 +53,7 @@ model.get_weights()
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 #run Model
-model.fit(x_train, y_train,epochs=2, batch_size=1, validation_data=[x_test, y_test], verbose=1)
+model.fit(x_train, y_train,epochs=2, batch_size=5, validation_data=[x_test, y_test], verbose=1)
 
 results = model.evaluate(x_test, y_test)
 loss = round(results[0],5)

@@ -58,7 +58,7 @@ def runWine(id, data):
     
 
     #Set variables
-    epochs = int(data["parameters"]["valueparameterOrBoolparameterOrComboparameter"][2]["value"])
+    epochs = int(data["parameters"]["valueparameterOrBoolparameterOrComboparameter"][1]["value"])
     global globalEpochsNr
     globalEpochsNr = epochs
     global globalId
@@ -113,6 +113,7 @@ def runWine(id, data):
     for i in range(1, len(hiddenLayers)):
         #model.add(Dense(x.num_nodes, kernel_initializer=init_w, bias_initializer=init_b, activation=x.activation_function))
         model.add(Dense(hiddenLayers[i].num_nodes, activation=hiddenLayers[i].activation_function))
+        print("Dense-Layer:", hiddenLayers[i].num_nodes)
 
     #add output layer
     #model.add(Dense(num_classes, activation="sigmoid"))
@@ -128,7 +129,7 @@ def runWine(id, data):
     model.fit(x_train, y_train,epochs=epochs, batch_size=1, validation_data=[x_test, y_test], verbose=1, callbacks=[sendPercent])
 
     # Test on unseen data
-    results = model.evaluate(test_x, test_y)
+    results = model.evaluate(x_test, y_test)
     loss = round(results[0],5)
     accuracy = round(results[1],5)
     accuracyinPrecent = accuracy * 100
