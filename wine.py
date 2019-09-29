@@ -146,7 +146,7 @@ def runWine(id, data):
             {
                 'id': id,
                 'createTimestamp': x.strftime("%d.%m.%Y %I:%M:%S %p"),
-                'trainingTime': str(trainingTime.seconds),
+                'trainingTime': str(int(trainingTime.seconds / 60)),
                 'numberOfTraining': 1,
                 'lastResult': accuracyinPrecent,
                 'bestResult': accuracyinPrecent,
